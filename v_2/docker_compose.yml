@@ -1,0 +1,55 @@
+version: '3.9'
+
+services:
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    network_mode: host
+
+
+  mariadb:
+    image: mariadb:latest
+    container_name: mariadb
+    environment:
+      MYSQL_ROOT_PASSWORD: your_root_password
+      MYSQL_DATABASE: your_database_name
+      MYSQL_USER: your_db_user
+      MYSQL_PASSWORD: your_db_password
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    network_mode: host
+
+  kea-dhcp:
+    image: iscproject/kea:2.3.4
+    container_name: kea-dhcp
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ./kea-config:/etc/kea
+    ports:
+      - "67:67/udp"  # DHCP server port
+
+  tftp:
+    image: panubo/tftp
+    container_name: tftp-server
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ./tftpboot:/srv/tftp
+    ports:
+      - "69:69/udp"  # TFTP port
+
+volumes:
+  mariadb_data:
+    driver: local
+  tftpboot:
+    driver: local
+
+networks:
+  ipxe_network:
+    driver: bridge

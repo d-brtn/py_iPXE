@@ -1,0 +1,60 @@
+version: '3.9'
+
+services:
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+
+    networks:
+      default:
+        # Static IP here so dnsmasq can point to Nginx easily
+        ipv4_address: 172.16.1.2
+
+  mariadb:
+    image: mariadb:latest
+    container_name: mariadb
+    environment:
+      MYSQL_ROOT_PASSWORD: your_root_password
+      MYSQL_DATABASE: your_database_name
+      MYSQL_USER: your_db_user
+      MYSQL_PASSWORD: your_db_password
+    volumes:
+      - mariadb_data:/var/lib/mysql
+
+    
+
+  dnsmasq:
+    container_name: dnsmasq
+    image: strm/dnsmasq
+    volumes:
+      - ./configs/dnsmasq.conf:/etc/dnsmasq.conf
+    ports:
+      - 63:53/udp
+    cap_add:
+      - NET_ADMIN
+    networks:
+      default:
+        ipv4_address: 172.16.1.1
+
+
+
+
+
+volumes:
+  mariadb_data:
+    driver: local
+  tftpboot:
+    driver: local
+
+networks:
+  default:
+    ipam:
+      config:
+        - subnet:   172.16.0.0/23
+          ip_range: 172.16.0.0/24
+
